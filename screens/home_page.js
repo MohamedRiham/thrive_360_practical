@@ -12,25 +12,27 @@ import { Picker } from "@react-native-picker/picker";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import showError from "../shared_components/error_message";
 import { categories } from "../shared_components/models/categories";
+
 export default function Root() {
   const { items, loading, search, filterByCategory, extremeError, fetchItems, allItems, generalError } = useContext(ItemsContext);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedSubCategory, setSelectedSubCategory] = useState("");
   useEffect(() => {
     if (extremeError) {
-
       showError(extremeError, fetchItems, true);
     }
     else if (generalError) {
-
       showError(generalError, () => {
-
         if (selectedSubCategory) {
           filterByCategory(selectedCategory, selectedSubCategory);
         } else {
           filterByCategory(selectedCategory);
         }
-      }
+      },
+        () => {
+          setSelectedCategory("");
+          setSelectedSubCategory("");
+        }
       );
 
     }
@@ -39,7 +41,6 @@ export default function Root() {
     <SafeAreaProvider>
       <SafeAreaView style={styles.container}>
         <Text style={styles.header}>Product List</Text>
-
         <TextInput
           style={styles.searchInput}
           editable={allItems.length > 0}
@@ -51,19 +52,16 @@ export default function Root() {
           }
         />
         <Text style={styles.instructions}>select category</Text>
-
         <View style={styles.pickerContainer}>
           <Picker
             selectedValue={selectedCategory}
             enabled={allItems.length > 0}
-            onValueChange={(value) => {
+            onValueChange={async (value) => {
               try {
                 setSelectedCategory(value);
-                filterByCategory(value);
+                await filterByCategory(value);
               } catch (e) {
-
-
-
+                setSelectedCategory("");
               }
             }
             }
@@ -74,23 +72,21 @@ export default function Root() {
               <Picker.Item key={cat} label={cat} value={cat} />
             ))}
           </Picker>
-
-
           {selectedCategory && selectedCategory !== "all" && (
             <>
               <Text style={styles.instructions}>Select Sub Category</Text>
               <Picker
                 selectedValue={selectedSubCategory}
-                onValueChange={(sub) => {
+                onValueChange={async (sub) => {
                   try {
                     setSelectedSubCategory(sub);
-                    filterByCategory(selectedCategory, sub);
+                    await filterByCategory(selectedCategory, sub);
                   } catch (e) {
+                    setSelectedSubCategory("");
                   }
                 }
                 }
                 style={styles.picker}
-
               >
                 <Picker.Item label="All" value="" />
                 {categories[selectedCategory].map((sub) => (
@@ -100,7 +96,6 @@ export default function Root() {
             </>
           )}
         </View>
-
         {loading ? (
           <ActivityIndicator size="large" color="white" style={{ marginTop: 20 }} />
         ) : (
@@ -210,5 +205,4 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     color: "white",
   },
-
 });

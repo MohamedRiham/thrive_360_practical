@@ -1,9 +1,7 @@
 import { Alert } from "react-native";
 
-export default function showError(message, onRetry, omitCancelButton) {
+export default function showError(message, onRetry, onCancel, omitCancelButton) {
   const buttons = [];
-
-
   buttons.push({
     text: "Retry",
     onPress: () => {
@@ -11,11 +9,13 @@ export default function showError(message, onRetry, omitCancelButton) {
     },
   });
 
-    if (!omitCancelButton) {
+  if (!omitCancelButton) {
     buttons.push({
       text: "Cancel",
-        style: 'cancel',
-      onPress: () => {},
+      style: 'cancel',
+      onPress: () => {
+        if (onCancel) onCancel();
+      },
     });
   }
 

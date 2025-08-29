@@ -5,7 +5,6 @@ const baseUrl = "https://745f0d73-41cc-4a5d-beef-93fd274e6bd8-dev.e1-us-east-azu
 // Create context with default values
 export const ItemsContext = createContext();
 
-
 export const ItemsProvider = ({ children }) => {
   const [itemsFetchedByCategory, setItemsFetchedByCategory] = useState([]);
   const [allItems, setItems] = useState([]);
@@ -15,7 +14,6 @@ export const ItemsProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [generalError, setGeneralError] = useState(null);
-
 
   const fetchItems = async () => {
     try {
@@ -31,17 +29,14 @@ export const ItemsProvider = ({ children }) => {
         setFilteredItems([]);
       }
     } catch (err) {
-
-      setExtremeError("Failed to fetch items"); 
+      setExtremeError("Failed to fetch items");
     } finally {
       setLoading(false);
     }
   };
 
-
   const applyFilters = () => {
     let tempItemList = itemsFetchedByCategory.length > 0 ? itemsFetchedByCategory : allItems;
-
     // Search filter
     if (searchValue) {
       tempItemList = tempItemList.filter(item =>
@@ -52,23 +47,15 @@ export const ItemsProvider = ({ children }) => {
       );
     }
     setFilteredItems(tempItemList);
-
-
-
   };
-
-
 
   const search = (value) => {
     if (!value) {
       setSearchValue("");
-
     } else {
       setSearchValue(value.toLowerCase());
-
     }
   };
-
 
   const filterByCategory = async (category, subCategory = "") => {
     try {
@@ -77,35 +64,25 @@ export const ItemsProvider = ({ children }) => {
       if (!category || category === "all") {
         setItemsFetchedByCategory([]);
         setFilteredItems(allItems);
-
       }
       else {
         let url = `${baseUrl}/items/filter?category=${encodeURIComponent(category)}`;
         if (subCategory) {
           url += `&subCategory=${encodeURIComponent(subCategory)}`;
         }
-
         const data = await fetchData(url);
         if (data) {
           setItemsFetchedByCategory(data);
           setFilteredItems(data);
-
         }
       }
     } catch (err) {
-                setGeneralError("Something went wrong while fetching filtered items"); 
-
-      
-
+      setGeneralError("Something went wrong while fetching filtered items");
     }
     setLoading(false);
-
-
   };
 
-
   useEffect(() => {
-
     applyFilters();
   }, [itemsFetchedByCategory, searchValue]);
 
@@ -114,7 +91,7 @@ export const ItemsProvider = ({ children }) => {
   }, []);
 
   return (
-    <ItemsContext.Provider value={{ items: filteredItems, loading, fetchItems, search, filterByCategory, extremeError, allItems, generalError}}>
+    <ItemsContext.Provider value={{ items: filteredItems, loading, fetchItems, search, filterByCategory, extremeError, allItems, generalError }}>
       {children}
     </ItemsContext.Provider>
   );
