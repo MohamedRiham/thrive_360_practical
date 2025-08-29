@@ -19,7 +19,7 @@ export default function Root() {
   const [selectedSubCategory, setSelectedSubCategory] = useState("");
   useEffect(() => {
     if (extremeError) {
-      showError(extremeError, fetchItems, true);
+      showError(extremeError, fetchItems, null, true);
     }
     else if (generalError) {
       showError(generalError, () => {
