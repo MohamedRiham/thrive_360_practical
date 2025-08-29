@@ -1,53 +1,83 @@
+import ErrorMessage from "../shared_components/error_message";
 import React, { createContext, useState, useEffect } from "react";
 import { fetchData } from "../services/api_service";
-const baseUrl = "http://172.25.107.69:3000";
+const baseUrl = "https://745f0d73-41cc-4a5d-beef-93fd274e6bd8-dev.e1-us-east-azure.choreoapis.dev/store/store-service/v1.0";
 // Create context with default values
-export const ItemsContext = createContext({
-  items: [],
-  loading: false,
-  fetchItems: async () => { },
-  search: () => { },
-  filterByCategory: () => { }, // 👈 added here
-});
+export const ItemsContext = createContext();
+
 
 export const ItemsProvider = ({ children }) => {
-  const [items, setItems] = useState([]);
+  const [itemsFetchedByCategory, setItemsFetchedByCategory] = useState([]);
+  const [allItems, setItems] = useState([]);
+
   const [filteredItems, setFilteredItems] = useState([]);
+  const [extremeError, setExtremeError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
+  const [generalError, setGeneralError] = useState(null);
+
 
   const fetchItems = async () => {
     try {
       setLoading(true);
+      setExtremeError(null);
       const data = await fetchData(`${baseUrl}/items`);
-      setItems(data);
-      setFilteredItems(data);
+
+      if (data) {
+        setItems(data);
+        setFilteredItems(data);
+      } else {
+        setItems([]);
+        setFilteredItems([]);
+      }
     } catch (err) {
-      console.error("Failed to fetch items", err);
+
+      setExtremeError("Failed to fetch items"); 
     } finally {
       setLoading(false);
     }
   };
 
+
+  const applyFilters = () => {
+    let tempItemList = itemsFetchedByCategory.length > 0 ? itemsFetchedByCategory : allItems;
+
+    // Search filter
+    if (searchValue) {
+      tempItemList = tempItemList.filter(item =>
+        (item.name?.toLowerCase() || "").includes(searchValue) ||
+        (item.brand?.toLowerCase() || "").includes(searchValue) ||
+        (item.category?.toLowerCase() || "").includes(searchValue) ||
+        (item.subCategory?.toLowerCase() || "").includes(searchValue)
+      );
+    }
+    setFilteredItems(tempItemList);
+
+
+
+  };
+
+
+
   const search = (value) => {
-    const lowerValue = value.toLowerCase();
-    const filtered = items.filter(
-      (item) =>
-        item.name.toLowerCase().includes(lowerValue) ||
-        item.brand.toLowerCase().includes(lowerValue) ||
-        item.category.toLowerCase().includes(lowerValue) ||
-        item.subCategory.toLowerCase().includes(lowerValue)
-    );
-    setFilteredItems(filtered);
+    if (!value) {
+      setSearchValue("");
+
+    } else {
+      setSearchValue(value.toLowerCase());
+
+    }
   };
 
 
   const filterByCategory = async (category, subCategory = "") => {
     try {
+      setGeneralError(null);
       setLoading(true);
-      if (!category || category === "All") {
+      if (!category || category === "all") {
+        setItemsFetchedByCategory([]);
+        setFilteredItems(allItems);
 
-        await fetchItems();
-        return;
       }
       else {
         let url = `${baseUrl}/items/filter?category=${encodeURIComponent(category)}`;
@@ -56,22 +86,35 @@ export const ItemsProvider = ({ children }) => {
         }
 
         const data = await fetchData(url);
-        setFilteredItems(data);
+        if (data) {
+          setItemsFetchedByCategory(data);
+          setFilteredItems(data);
+
+        }
       }
     } catch (err) {
-      console.error("Failed to fetch filtered items", err);
+                setGeneralError("Something went wrong while fetching filtered items"); 
+
+      
+
     }
     setLoading(false);
 
+
   };
 
-  // Fetch once on mount
+
+  useEffect(() => {
+
+    applyFilters();
+  }, [itemsFetchedByCategory, searchValue]);
+
   useEffect(() => {
     fetchItems();
   }, []);
 
   return (
-    <ItemsContext.Provider value={{ items: filteredItems, loading, fetchItems, search, filterByCategory }}>
+    <ItemsContext.Provider value={{ items: filteredItems, loading, fetchItems, search, filterByCategory, extremeError, allItems, generalError}}>
       {children}
     </ItemsContext.Provider>
   );

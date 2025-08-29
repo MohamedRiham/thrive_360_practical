@@ -9,14 +9,16 @@ export async function fetchData(url) {
       },
     });
 
-    if (!resp.ok) {
-      throw new Error(`Network response was not ok: ${resp.status}`);
+    if (resp.ok) {
+      const data = await resp.json();
+      return data;
+
+    } else {
+      throw new Error(`Server error: ${resp.status}`);
     }
 
-    const data = await resp.json(); 
-    return data;
   } catch (error) {
-
     throw new Error(`Failed to fetch data: ${error.message}`);
+
   }
 }
